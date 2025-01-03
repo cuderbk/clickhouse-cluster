@@ -1,0 +1,48 @@
+<!-- roles/clickhouse_instance/templates/users_instance.xml.j2 -->
+
+<clickhouse>
+    <!-- Users Configuration -->
+    <users>
+        <default>
+            <password>{{ password }}</password>
+            <networks>
+                <ip>::/0</ip> <!-- Allows access from all IPs -->
+            </networks>
+            <profile>default</profile>
+            <quota>default</quota>
+            <grants>
+                <query>GRANT ALL ON *.*</query>
+            </grants>
+        </default>
+    </users>
+
+    <!-- Profiles Configuration -->
+    <profiles>
+        <!-- Default Profile with basic settings -->
+        <default>
+            <!-- Add specific settings as needed -->
+        </default>
+
+        <!-- Read-Only Profile -->
+        <readonly>
+            <readonly>1</readonly> <!-- Restricts all modifications -->
+        </readonly>
+    </profiles>
+
+    <!-- Quotas Configuration -->
+    <quotas>
+        <!-- Default Quota -->
+        <default>
+            <interval>
+                <duration>3600</duration> <!-- 1-hour interval -->
+
+                <!-- No restrictions; only monitoring resource usage -->
+                <queries>0</queries>
+                <errors>0</errors>
+                <result_rows>0</result_rows>
+                <read_rows>0</read_rows>
+                <execution_time>0</execution_time>
+            </interval>
+        </default>
+    </quotas>
+</clickhouse>

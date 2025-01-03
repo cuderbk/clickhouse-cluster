@@ -1,0 +1,12 @@
+# roles/clickhouse_instance/handlers/main.yml
+
+---
+- name: Reload systemd
+  command: systemctl daemon-reload
+  become: yes
+
+- name: Restart ClickHouse instance {{ instance }}
+  systemd:
+    name: clickhouse-{{ instance }}
+    state: restarted
+    enabled: yes

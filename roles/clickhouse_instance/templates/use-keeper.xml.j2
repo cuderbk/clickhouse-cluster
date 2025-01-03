@@ -1,0 +1,11 @@
+{# roles/clickhouse/templates/use-keeper.xml.j2 #}
+<clickhouse>
+    <zookeeper>
+        {% for shard in shards %}
+        <node index="{{ loop.index }}">
+            <host>{{ shard.host }}</host>
+            <port>9181</port>
+        </node>
+        {% endfor %}
+    </zookeeper>
+</clickhouse>

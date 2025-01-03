@@ -1,0 +1,7 @@
+- name: Create user configuration for the shard
+  template:
+    src: user.xml.j2
+    dest: "/etc/{{ shard.host == 'localhost' | ternary('clickhouse-server' ~ shard.port, 'clickhouse-server') }}/users.d/{{ shard.user }}.xml"
+    owner: clickhouse
+    group: clickhouse
+    mode: '0644'

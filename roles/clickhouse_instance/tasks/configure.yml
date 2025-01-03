@@ -1,0 +1,57 @@
+# roles/clickhouse_instance/tasks/configure.yml
+
+---
+- name: Template instance config.xml for instance {{ instance }}
+  template:
+    src: "config_instance.xml.j2"
+    dest: "{{ INSTANCE_CONFIG_FILE }}"
+    owner: clickhouse
+    group: clickhouse
+    mode: '0644'
+  vars:
+    zookeeper_nodes: "{{ zookeeper_nodes_list }}"
+
+
+- name: Template instance users.xml for instance {{ instance }}
+  template:
+    src: "users_instance.xml.j2"
+    dest: "{{ USER_CONFIG_FILE }}"
+    owner: clickhouse
+    group: clickhouse
+    mode: '0644'
+
+- name: Template systemd service for instance {{ instance }}
+  template:
+    src: "systemd/clickhouse.service.j2"
+    dest: "/etc/systemd/system/clickhouse-{{ instance }}.service"
+    owner: root
+    group: root
+    mode: '0644'
+  # notify:
+  #   - Reload systemd
+  #   - Restart ClickHouse instance {{ instance }}
+    
+- name: Template profiles.xml for instance {{ instance }}
+  template:
+    src: "profiles_instance.xml.j2"
+    dest: "/etc/clickhouse-server/config.d/profiles_instance{{ instance }}.xml"
+    owner: clickhouse
+    group: clickhouse
+    mode: '0644'
+    
+- name: Remove any existing runtime directory
+  file:
+    path: "/run/clickhouse-{{ instance }}"
+    state: absent
+
+- name: Reload and restart systemd service for ClickHouse
+  block:
+    - name: Reload systemd daemon
+      command: systemctl daemon-reload
+
+    - name: Enable and start ClickHouse service for instance {{ instance }}
+      systemd:
+        name: clickhouse-{{ instance }}
+        enabled: yes
+        state: started
+  become: yes

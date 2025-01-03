@@ -1,0 +1,58 @@
+# roles/clickhouse_instance/tasks/setup_directories.yml
+
+---
+- name: Define variables for directories
+  set_fact:
+    CONFIG_DIR: "/etc/clickhouse-server/instance{{ instance }}"
+    DATA_DIR: "/var/lib/clickhouse-server/instance{{ instance }}"
+    LOG_DIR: "/var/log/clickhouse-server/instance{{ instance }}"
+    INSTANCE_CONFIG_FILE: "/etc/clickhouse-server/config.d/instance{{ instance }}.xml"
+    USER_CONFIG_FILE: "/etc/clickhouse-server/users.d/instance{{ instance }}.xml"
+
+- name: Create ClickHouse configuration directory (if needed)
+  file:
+    path: "/etc/clickhouse-server/config.d"
+    state: directory
+    owner: clickhouse
+    group: clickhouse
+    mode: '0755'
+
+- name: Create ClickHouse users configuration directory (if needed)
+  file:
+    path: "/etc/clickhouse-server/users.d"
+    state: directory
+    owner: clickhouse
+    group: clickhouse
+    mode: '0755'
+
+- name: Create ClickHouse instance configuration directory
+  file:
+    path: "{{ CONFIG_DIR }}"
+    state: directory
+    owner: clickhouse
+    group: clickhouse
+    mode: '0755'
+
+- name: Create ClickHouse log directory
+  file:
+    path: "{{ LOG_DIR }}"
+    state: directory
+    owner: clickhouse
+    group: clickhouse
+    mode: '0755'
+
+- name: Create ClickHouse data directory
+  file:
+    path: "{{ DATA_DIR }}"
+    state: directory
+    owner: clickhouse
+    group: clickhouse
+    mode: '0755'
+    
+- name: Create ClickHouse runtime directory
+  file:
+    path: "/run/clickhouse-{{ instance }}"
+    state: directory
+    owner: clickhouse
+    group: clickhouse
+    mode: '0755'

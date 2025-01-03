@@ -1,0 +1,18 @@
+<!-- roles/clickhouse_instance/templates/remote_servers.xml.j2 -->
+
+<clickhouse>
+  <remote_servers replace="true">
+    <{{ cluster_name }}>
+      <secret>mysecretphrase</secret>
+      {% for shard in shards %}
+      <shard>
+        <internal_replication>true</internal_replication>
+        <replica>
+          <host>{{ shard.host }}</host>
+          <port>{{ shard.port }}</port>
+        </replica>
+      </shard>
+      {% endfor %}
+    </{{ cluster_name }}>
+  </remote_servers>
+</clickhouse>

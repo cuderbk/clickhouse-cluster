@@ -1,0 +1,12 @@
+- hosts: all
+  become: yes
+  vars_files:
+    - ../vars/shards.yml
+
+  tasks:
+    - name: Configure ClickHouse nodes and shards
+      include_role:
+        name: clickhouse_node
+      vars:
+        shard: "{{ item }}"
+      with_items: "{{ shards }}"

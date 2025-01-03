@@ -1,0 +1,20 @@
+[Unit]
+Description=ClickHouse Server Instance {{ instance }}
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/clickhouse-server --config-file=/etc/clickhouse-server/config.d/instance{{ instance }}.xml
+ExecStartPre=/bin/mkdir -p /run/clickhouse-{{ instance }}
+ExecStartPre=/bin/chown clickhouse:clickhouse /run/clickhouse-{{ instance }}
+RuntimeDirectory=clickhouse-{{ instance }}
+RuntimeDirectoryMode=0755
+PIDFile=/run/clickhouse-{{ instance }}/clickhouse.pid
+Restart=always
+TimeoutStopSec=0
+User=clickhouse
+Group=clickhouse
+Environment="CLICKHOUSE_LOG_DIR={{ LOG_DIR }}" "CLICKHOUSE_DATA_DIR={{ DATA_DIR }}"
+
+[Install]
+WantedBy=multi-user.target

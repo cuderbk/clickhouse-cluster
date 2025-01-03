@@ -1,0 +1,4 @@
+- name: Start ClickHouse instances
+  command: >
+    clickhouse-server --config-file={{ clickhouse_config_dir }}-{{ item }}/config.xml
+  loop: "{{ range(1, hostvars[inventory_hostname].instances + 1) | list }}"

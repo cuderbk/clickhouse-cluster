@@ -1,0 +1,37 @@
+CREATE TABLE station_metrics_local
+(
+    stationId UInt32,
+    timestamp DateTime,
+    temperature Float32,
+    humidity Float32,
+    windSpeed Float32,
+    pressure Float32
+)
+ENGINE = MergeTree()
+PARTITION BY toYYYYMM(timestamp)  -- Optional, for partitioning by month
+ORDER BY (stationId, timestamp); -- Define order for efficient querying
+
+CREATE TABLE station_metrics_distributed
+AS station_metrics_local
+ENGINE = Distributed(
+    'cluster_2S_1R',  -- Name of your cluster defined in the ClickHouse configuration
+    'default',           -- Database name
+    'station_metrics_local',  -- Local table name
+    stationId            -- Sharding key
+);
+
+SELECT * FROM system.clusters;
+
+DESCRIBE TABLE station_metrics_distributed;
+
+clickhouse-benchmark --port 9100 --password shard1 --query="SELECT COUNT(*) FROM station_metrics_distributed" --iterations=100 --concurrency=10
+
+clickhouse-benchmark --port 9100 --password shard1 --query="SELECT stationId, AVG(temperature) FROM station_metrics_distributed GROUP BY stationId"
+
+clickhouse-benchmark --port 9100 --password shard1 --query="INSERT INTO station_metrics_distributed (stationId, timestamp, temperature, humidity, windSpeed, pressure) VALUES (1, now(), 25.5, 65, 10.5, 990)"
+
+SELECT
+    stationId,
+    count(*)
+FROM station_metrics_distributed
+GROUP BY stationId;

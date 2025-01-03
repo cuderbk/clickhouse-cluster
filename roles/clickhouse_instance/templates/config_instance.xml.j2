@@ -1,0 +1,144 @@
+<!-- roles/clickhouse_instance/templates/config_instance.xml.j2 -->
+<clickhouse>
+    <!-- Logging Configuration -->
+    <logger>
+        <level>debug</level>
+        <log>{{ LOG_DIR }}/clickhouse-server.log</log>
+        <errorlog>{{ LOG_DIR }}/clickhouse-server.err.log</errorlog>
+        <size>1000M</size>
+        <count>3</count>
+    </logger>
+
+    <!-- Ports Configuration -->
+    <http_port>{{ port_http }}</http_port>
+    <tcp_port>{{ port_tcp }}</tcp_port>
+    <interserver_http_port>{{ port_interserver }}</interserver_http_port>
+    <interserver_http_host>127.0.0.1</interserver_http_host>
+    <listen_host>0.0.0.0</listen_host>
+
+    <!-- Storage and Paths -->
+    <path>{{ DATA_DIR }}</path>
+    <user_files_path>/var/lib/clickhouse/user_files/</user_files_path>
+
+    <!-- ZooKeeper Configuration -->
+    <zookeeper>
+        {% for zookeeper_node in zookeeper_nodes %}
+        <node index="{{ zookeeper_node.id }}">
+            <host>{{ zookeeper_node.host }}</host>
+            <port>{{ zookeeper_node.port }}</port>
+        </node>
+        {% endfor %}
+    </zookeeper>
+
+    <!-- Remote Servers for Replication -->
+    <remote_servers replace="true">
+        <{{ cluster_name }}>
+            <secret>mysecretphrase</secret>
+            {% for shard in shards %}
+            <shard>
+                <internal_replication>{{ shard.internal_replication }}</internal_replication>
+                {% for replica in shard.replicas %}
+                <replica>
+                    <host>{{ replica.host }}</host>
+                    <port>{{ replica.port }}</port>
+                </replica>
+                {% endfor %}
+            </shard>
+            {% endfor %}
+        </{{ cluster_name }}>
+    </remote_servers>
+
+    <!-- Macros -->
+    <macros>
+        <shard>{{ shard_id }}</shard>
+        <replica>{{ replica_id }}</replica>
+    </macros>
+
+    <!-- URL Scheme Mappers -->
+    <url_scheme_mappers>
+        <s3>
+            <to>https://{bucket}.s3.amazonaws.com</to>
+        </s3>
+        <gs>
+            <to>https://storage.googleapis.com/{bucket}</to>
+        </gs>
+        <oss>
+            <to>https://{bucket}.oss.aliyuncs.com</to>
+        </oss>
+    </url_scheme_mappers>
+
+    <!-- HTTP Options Response Headers -->
+    <http_options_response>
+        <header>
+            <name>Access-Control-Allow-Origin</name>
+            <value>*</value>
+        </header>
+        <header>
+            <name>Access-Control-Allow-Headers</name>
+            <value>origin, x-requested-with, x-clickhouse-format, x-clickhouse-user, x-clickhouse-key, Authorization</value>
+        </header>
+        <header>
+            <name>Access-Control-Allow-Methods</name>
+            <value>POST, GET, OPTIONS</value>
+        </header>
+        <header>
+            <name>Access-Control-Max-Age</name>
+            <value>86400</value>
+        </header>
+    </http_options_response>
+
+    <!-- SSL Configuration -->
+    <openSSL>
+        <server>
+            <verificationMode>none</verificationMode>
+            <loadDefaultCAFile>true</loadDefaultCAFile>
+            <cacheSessions>true</cacheSessions>
+            <disableProtocols>sslv2,sslv3</disableProtocols>
+            <preferServerCiphers>true</preferServerCiphers>
+            <invalidCertificateHandler>
+                <name>RejectCertificateHandler</name>
+            </invalidCertificateHandler>
+        </server>
+        <client>
+            <loadDefaultCAFile>true</loadDefaultCAFile>
+            <cacheSessions>true</cacheSessions>
+            <disableProtocols>sslv2,sslv3</disableProtocols>
+            <preferServerCiphers>true</preferServerCiphers>
+            <invalidCertificateHandler>
+                <name>RejectCertificateHandler</name>
+            </invalidCertificateHandler>
+        </client>
+    </openSSL>
+
+    <!-- User Directories -->
+    <user_directories>
+        <users_xml>
+            <path>{{USER_CONFIG_FILE}}</path>
+        </users_xml>
+        <local_directory>
+            <path>/var/lib/clickhouse/access/</path>
+        </local_directory>
+    </user_directories>
+
+    <!-- Access Control Improvements -->
+    <access_control_improvements>
+        <users_without_row_policies_can_read_rows>true</users_without_row_policies_can_read_rows>
+        <on_cluster_queries_require_cluster_grant>true</on_cluster_queries_require_cluster_grant>
+        <select_from_system_db_requires_grant>true</select_from_system_db_requires_grant>
+        <select_from_information_schema_requires_grant>true</select_from_information_schema_requires_grant>
+        <settings_constraints_replace_previous>true</settings_constraints_replace_previous>
+        <table_engines_require_grant>false</table_engines_require_grant>
+        <role_cache_expiration_time_seconds>600</role_cache_expiration_time_seconds>
+    </access_control_improvements>
+
+    <!-- Password and Authentication Settings -->
+    <allow_plaintext_password>1</allow_plaintext_password>
+    <allow_no_password>1</allow_no_password>
+    <allow_implicit_no_password>1</allow_implicit_no_password>
+    <default_password_type>plaintext_password</default_password_type>
+
+    <!-- General Configuration -->
+    <async_load_databases>true</async_load_databases>
+    <default_database>default</default_database>
+    <default_profile>default</default_profile>
+</clickhouse>

@@ -1,0 +1,55 @@
+# site.yml
+
+---
+- name: Setup and manage ClickHouse cluster
+  hosts: clickhouse_nodes
+  become: yes
+  vars_files:
+    - ./vars/shards.yml
+
+  tasks:
+    - name: Define Zookeeper nodes
+      set_fact:
+        zookeeper_nodes_list: "{{ zookeeper_nodes_list | default([]) + [{'id': item.instance, 'host': inventory_hostname, 'port': item.port}] }}"
+      loop: "{{ hostvars[inventory_hostname].instances | selectattr('instance', 'le', 3) | list }}"
+      loop_control:
+        label: "{{ inventory_hostname }}:{{ item.port }}"
+        loop_var: item
+
+    - name: Debug Zookeeper Nodes
+      debug:
+        var: zookeeper_nodes_list
+
+    - name: Define Cluster Shards
+      set_fact:
+        cluster_shards: "{{ cluster_shards | default([]) + [{'instance': item.instance, 'password': item.password, 'internal_replication': True, 'replicas': [{'host': item.host, 'port': item.port}]}] }}"
+      loop: "{{ shards }}"
+      loop_control:
+        loop_var: item
+
+
+    - name: Debug Cluster Shards
+      debug:
+        var: cluster_shards
+
+    - name: Setup ClickHouse instances
+      include_role:
+        name: clickhouse_instance
+      vars:
+        # cluster_name: "{{ cluster_name }}"
+        shards: "{{ cluster_shards }}"
+        zookeeper_nodes_role: "{{ zookeeper_nodes_list }}"
+        port_tcp: "{{ item.port }}"
+        port_http: "{{ item.port + 1100 }}"          # Example: TCP 9000 -> HTTP 10000
+        port_interserver: "{{ item.port + 1200 }}"  # Example: TCP 9000 -> Interserver 9200
+        instance: "{{ item.instance }}"
+        shard_info: "{{ shards | selectattr('instance', '==', item.instance) | list | first }}"
+        password: "{{ shard_info.password if shard_info else 'default_password' }}"
+        shard_id: "{{ shard_info.instance }}"
+        replica_id: "replica_1"                     # Modify if multiple replicas are needed
+      loop: "{{ hostvars[inventory_hostname].instances }}"
+      loop_control:
+        loop_var: item
+    - name: Debug Cluster Shards
+      debug:
+        var: cluster_shards

@@ -1,0 +1,6 @@
+# roles/clickhouse_instance/tasks/main.yml
+
+---
+- include_tasks: setup_directories.yml
+- include_tasks: configure.yml
+# - include_tasks: manage_service.yml
