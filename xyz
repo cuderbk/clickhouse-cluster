@@ -1,26 +1,60 @@
-CREATE TABLE station_metrics_local
+SET allow_unrestricted_reads_from_keeper = 1; -- Allow unrestricted reads from ZooKeeper to avoid the error
+SELECT * FROM system.clusters;
+
+CREATE DATABASE station_metrics ON CLUSTER StationCluster;
+
+drop table if exists station_metrics.messages_local;
+drop table if exists station_metrics.messages_sharded;
+drop table if exists station_metrics.sensors_to_kafka;
+drop table if exists station_metrics.sensors_to_kafka_mv;
+
+CREATE TABLE station_metrics.messages_local ON CLUSTER StationCluster
 (
-    stationId UInt32,
-    timestamp DateTime,
-    temperature Float32,
-    humidity Float32,
-    windSpeed Float32,
-    pressure Float32
+    metric_value Float32,
+    metric String,
+    station_id UInt32,
+    timestamp DateTime64(0)
 )
 ENGINE = MergeTree()
 PARTITION BY toYYYYMM(timestamp)  -- Optional, for partitioning by month
 ORDER BY (stationId, timestamp); -- Define order for efficient querying
 
-CREATE TABLE station_metrics_distributed
-AS station_metrics_local
-ENGINE = Distributed(
-    'cluster_2S_1R',  -- Name of your cluster defined in the ClickHouse configuration
-    'default',           -- Database name
-    'station_metrics_local',  -- Local table name
-    stationId            -- Sharding key
-);
+-- Create a distributed table referencing the local table on all nodes
+-- The table will be created on all nodes and will be used to query the local table on all nodes
+CREATE TABLE station_metrics.messages_sharded ON CLUSTER StationCluster AS station_metrics.messages_local
+ENGINE = Distributed(StationCluster, station_metrics, messages_local, station_id);
 
-SELECT * FROM system.clusters;
+
+CREATE TABLE station_metrics.sensors_to_kafka ON CLUSTER StationCluster (
+    metric_value Float32,
+    metric String,
+    station_id UInt32,
+    timestamp DateTime64(0)
+) ENGINE = Kafka
+SETTINGS kafka_broker_list = '160.191.49.50:9092',
+         kafka_topic_list = 'sensor_data',
+         kafka_format = 'JSONEachRow',
+         kafka_group_name = 'clickhouse_consumer',
+         kafka_skip_broken_messages = 1,
+         kafka_num_consumers = 2;
+
+CREATE MATERIALIZED VIEW station_metrics.sensors_to_kafka_mv ON CLUSTER StationCluster
+TO station_metrics.messages_sharded AS
+SELECT * FROM station_metrics.sensors_to_kafka;
+
+-- Check the table is created and distributed properly on all nodes yet?
+SELECT name, cluster FROM system.databases WHERE name = 'station_metrics';
+
+-- Check the table is created and distributed properly on all nodes yet?
+SELECT database, name, engine, cluster FROM system.tables 
+WHERE database = 'station_metrics';
+
+-- Check operations on Kafka
+SELECT * FROM system.kafka_consumers;
+
+-- Check cluster operations on all nodes
+SELECT * FROM system.clusters WHERE cluster = 'StationCluster';
+
 
 DESCRIBE TABLE station_metrics_distributed;
 
@@ -35,3 +69,5 @@ SELECT
     count(*)
 FROM station_metrics_distributed
 GROUP BY stationId;
+
+

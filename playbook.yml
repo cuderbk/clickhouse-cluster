@@ -10,7 +10,7 @@
   tasks:
     - name: Define Zookeeper nodes
       set_fact:
-        zookeeper_nodes_list: "{{ zookeeper_nodes_list | default([]) + [{'id': item.instance, 'host': inventory_hostname, 'port': item.port}] }}"
+        zookeeper_nodes_list: "{{ zookeeper_nodes_list | default([]) + [{'id': item.instance, 'host': inventory_hostname, 'port': 2181}] }}"
       loop: "{{ hostvars[inventory_hostname].instances | selectattr('instance', 'le', 3) | list }}"
       loop_control:
         label: "{{ inventory_hostname }}:{{ item.port }}"

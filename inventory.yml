@@ -7,9 +7,9 @@ all:
         localhost:
           ansible_connection: local
           instances:
-            # - { port: 9100, instance: 1 }
-            # - { port: 9101, instance: 2 }
-            # - { port: 7100, instance: 3 }
-            # - { port: 7101, instance: 4 }
-            - { port: 7200, instance: 10 }
+            - { port: 9100, instance: 1 }
+            - { port: 9101, instance: 2 }
+            - { port: 7100, instance: 3 }
+            - { port: 7101, instance: 4 }
+            # - { port: 7200, instance: 10 }
         # Other hosts...

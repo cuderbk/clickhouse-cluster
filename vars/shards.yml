@@ -1,13 +1,13 @@
 # vars/shards.yml
 
-cluster_name: "Single_Instance"
+cluster_name: "StationCluster"
 
 shards:
-  # - { host: "localhost", port: 9100, user: "default", password: "shard1", instance: 1, existing: false }
-  # - { host: "localhost", port: 9101, user: "default", password: "shard2", instance: 2, existing: false }
-  # - { host: "localhost", port: 7100, user: "default", password: "shard3", instance: 3, existing: false }
-  # - { host: "localhost", port: 7101, user: "default", password: "shard4", instance: 4, existing: false }
+  - { host: "localhost", port: 9100, user: "default", password: "shard1", instance: 1, existing: false }
+  - { host: "localhost", port: 9101, user: "default", password: "shard2", instance: 2, existing: false }
+  - { host: "localhost", port: 7100, user: "default", password: "shard3", instance: 3, existing: false }
+  - { host: "localhost", port: 7101, user: "default", password: "shard4", instance: 4, existing: false }
   # - { host: "localhost", port: 9303, user: "default", password: "shard3", instance: 4, existing: false }
 
-  - { host: "localhost", port: 7200, user: "default", password: "shard1", instance: 10, existing: false }
+  # - { host: "localhost", port: 7200, user: "default", password: "shard1", instance: 10, existing: false }
   # Add other shards as needed
